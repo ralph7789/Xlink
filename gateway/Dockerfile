@@ -1,16 +1,25 @@
-FROM golang:1.21
+FROM golang:1.21-alpine AS builder
+
+# v8go requires CGO
+ENV CGO_ENABLED=1
+RUN apk add --no-cache gcc g++ musl-dev
 
 WORKDIR /app
-
-# install g++ to compile v8go
-RUN apt-get update && apt-get install -y g++
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY *.go ./
+COPY . .
 
-RUN go build -o /api-gateway
+RUN go build -o /app/gateway .
+
+FROM alpine:latest
+RUN apk add --no-cache libstdc++
+
+WORKDIR /app
+
+COPY --from=builder /app/gateway .
 
 EXPOSE 8080
-CMD [ "/api-gateway" ]
+
+CMD ["./gateway"]
