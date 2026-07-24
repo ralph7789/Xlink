@@ -1,27 +1,37 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"rogchap.com/v8go"
 )
 
 var (
 	mongoClient *mongo.Client
 	redisClient *redis.Client
 	ctx         = context.Background()
+	jwtSecret   = []byte(getEnv("JWT_SECRET", "supersecret"))
+
+	// V8 Isolate Pool
+	isolatePool = sync.Pool{
+		New: func() interface{} {
+			return v8go.NewIsolate()
+		},
+	}
 )
 
 type EndpointConfig struct {
@@ -30,11 +40,15 @@ type EndpointConfig struct {
 	Code   string `json:"code" bson:"code"`
 }
 
-func initDB() {
-	mongoURI := os.Getenv("MONGO_URI")
-	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017"
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
 	}
+	return fallback
+}
+
+func initDB() {
+	mongoURI := getEnv("MONGO_URI", "mongodb://localhost:27017")
 	clientOptions := options.Client().ApplyURI(mongoURI)
 	var err error
 	mongoClient, err = mongo.Connect(ctx, clientOptions)
@@ -42,15 +56,41 @@ func initDB() {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "localhost:6379"
-	}
+	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: redisAddr,
 	})
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Printf("Warning: Failed to connect to Redis: %v", err)
+	}
+}
+
+func authMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization header"})
+			return
+		}
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+			return
+		}
+
+		token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method")
+			}
+			return jwtSecret, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		c.Next()
 	}
 }
 
@@ -70,17 +110,16 @@ func main() {
 		c.Next()
 	})
 
-	// Management API
-	r.POST("/api/endpoints", createEndpoint)
-	r.GET("/api/endpoints", listEndpoints)
+	// Management API (Authenticated)
+	api := r.Group("/api")
+	api.Use(authMiddleware())
+	api.POST("/endpoints", createEndpoint)
+	api.GET("/endpoints", listEndpoints)
 
 	// Gateway execution route - catch all
 	r.Any("/run/*path", executeEndpoint)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := getEnv("PORT", "8080")
 	log.Printf("Gateway running on port %s", port)
 	r.Run(":" + port)
 }
@@ -132,7 +171,6 @@ func executeEndpoint(c *gin.Context) {
 	ip := c.ClientIP()
 	rateLimitKey := fmt.Sprintf("rate_limit:%s", ip)
 
-	// Basic rate limit: 100 requests per minute
 	requests, err := redisClient.Incr(ctx, rateLimitKey).Result()
 	if err == nil {
 		if requests == 1 {
@@ -157,39 +195,40 @@ func executeEndpoint(c *gin.Context) {
 		return
 	}
 
-	// Read body for forwarding
-	bodyBytes, _ := io.ReadAll(c.Request.Body)
+	// Efficient Payload Handling: limit to 1MB
+	bodyBytes, _ := io.ReadAll(io.LimitReader(c.Request.Body, 1024*1024))
 	bodyStr := string(bodyBytes)
 
-	headerMap := make(map[string]string)
-	for k, v := range c.Request.Header {
-		if len(v) > 0 {
-			headerMap[k] = v[0]
-		}
-	}
+	// Setup V8 Isolate from pool
+	iso := isolatePool.Get().(*v8go.Isolate)
+	defer isolatePool.Put(iso)
 
-	// Forward to sandbox
-	sandboxURL := os.Getenv("SANDBOX_URL")
-	if sandboxURL == "" {
-		sandboxURL = "http://localhost:3001"
-	}
+	// Create a new context for this execution
+	v8ctx := v8go.NewContext(iso)
+	defer v8ctx.Close()
 
-	payload := map[string]interface{}{
-		"code":    cfg.Code,
-		"method":  method,
-		"url":     path,
-		"headers": headerMap,
-		"body":    bodyStr,
-	}
+	// Inject safe variables
+	v8ctx.Global().Set("request_body", bodyStr)
+	v8ctx.Global().Set("request_method", method)
+	v8ctx.Global().Set("request_url", path)
 
-	payloadBytes, _ := json.Marshal(payload)
-	resp, err := http.Post(sandboxURL+"/execute", "application/json", bytes.NewBuffer(payloadBytes))
+	// Build the script string securely
+	script := fmt.Sprintf(`
+		(function() {
+			try {
+				const handler = function() { %s };
+				return JSON.stringify(handler());
+			} catch (e) {
+				return JSON.stringify({ error: e.message });
+			}
+		})();
+	`, cfg.Code)
+
+	val, err := v8ctx.RunScript(script, "endpoint.js")
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to execute in sandbox"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Execution error: " + err.Error()})
 		return
 	}
-	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(resp.Body)
-	c.Data(resp.StatusCode, "application/json", respBody)
+	c.Data(http.StatusOK, "application/json", []byte(val.String()))
 }

@@ -1,35 +1,53 @@
 version: '3.8'
 
 services:
-  gateway:
-    build: ./gateway
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mongo
-      - redis
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/apibuilder
-      - REDIS_ADDR=redis:6379
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
-
-  mongo:
+  mongodb:
     image: mongo:latest
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongodb_data:/data/db
+    networks:
+      - apinet
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     ports:
       - "6379:6379"
+    networks:
+      - apinet
+
+  gateway:
+    build:
+      context: ./gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=supersecret
+      - PORT=8080
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - apinet
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    depends_on:
+      - gateway
+    networks:
+      - apinet
 
 volumes:
-  mongo_data:
+  mongodb_data:
+
+networks:
+  apinet:
+    driver: bridge
