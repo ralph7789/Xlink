@@ -8,7 +8,7 @@ export default function AdminPortal() {
             <p className="text-muted-foreground mt-2">Manage the system, users, and platform settings.</p>
           </div>
           <div className="flex gap-4">
-            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:opacity-90 transition-opacity">
+            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
               Generate Report
             </button>
           </div>
@@ -36,7 +36,7 @@ export default function AdminPortal() {
           <h3 className="font-semibold text-lg mb-4">Recent Activity</h3>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0 last:pb-0">
+              <div key={i} className="flex items-center justify-between py-3 border-b border-border/50 last:border-b-0">
                 <div>
                   <p className="font-medium">System Update Completed</p>
                   <p className="text-sm text-muted-foreground">Version 2.4.1 deployed successfully.</p>

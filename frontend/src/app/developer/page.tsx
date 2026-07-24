@@ -8,10 +8,10 @@ export default function DeveloperPortal() {
             <p className="text-muted-foreground mt-2">Manage your API keys, integrations, and webhooks.</p>
           </div>
           <div className="flex gap-4">
-            <button className="bg-background text-foreground border border-border px-4 py-2 rounded-md font-medium text-sm hover:bg-muted transition-colors">
+            <button className="bg-background text-foreground border border-border px-4 py-2 rounded-md font-medium text-sm hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
               Documentation
             </button>
-            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:opacity-90 transition-opacity">
+            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
               Create API Key
             </button>
           </div>
@@ -37,7 +37,7 @@ export default function DeveloperPortal() {
                       <p className="font-medium">{env} Key</p>
                       <p className="text-sm text-muted-foreground font-mono mt-1">pk_live_********...</p>
                     </div>
-                    <button className="text-sm text-primary font-medium hover:underline">Revoke</button>
+                    <button className="text-sm text-red-500 font-medium hover:text-red-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded-sm px-1">Revoke</button>
                   </div>
                 ))}
               </div>
@@ -48,17 +48,17 @@ export default function DeveloperPortal() {
             <div className="border border-border bg-card rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-sm text-primary hover:underline">API Reference</a></li>
-                <li><a href="#" className="text-sm text-primary hover:underline">Integration Guides</a></li>
-                <li><a href="#" className="text-sm text-primary hover:underline">Webhook Testing</a></li>
-                <li><a href="#" className="text-sm text-primary hover:underline">Support Forums</a></li>
+                <li><a href="#" className="text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1">API Reference</a></li>
+                <li><a href="#" className="text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1">Integration Guides</a></li>
+                <li><a href="#" className="text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1">Webhook Testing</a></li>
+                <li><a href="#" className="text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1">Support Forums</a></li>
               </ul>
             </div>
             
             <div className="border border-border bg-primary/5 rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold mb-2">Need help?</h3>
               <p className="text-sm text-muted-foreground mb-4">Our developer success team is available 24/7 to assist with your integration.</p>
-              <button className="w-full bg-background border border-border px-4 py-2 rounded-md font-medium text-sm hover:bg-muted transition-colors">
+              <button className="w-full bg-background border border-border px-4 py-2 rounded-md font-medium text-sm hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 Contact Support
               </button>
             </div>

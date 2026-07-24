@@ -16,7 +16,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "xLink - Application Portals",
-  description: "Next.js Application Portals",
+  description: "xLink: The central enterprise hub for API management and system operations.",
 };
 
 export default function RootLayout({
@@ -30,14 +30,17 @@ export default function RootLayout({
         <div className="min-h-screen flex flex-col">
           <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container mx-auto flex h-14 items-center justify-between px-4">
-              <Link href="/" className="font-bold text-lg tracking-tight">
+              <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+                <svg className="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
                 xLink
               </Link>
               <nav className="flex items-center gap-6 text-sm font-medium">
-                <Link href="/developer" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                <Link href="/developer" className="transition-colors hover:text-foreground text-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1">
                   Developer
                 </Link>
-                <Link href="/admin" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                <Link href="/admin" className="transition-colors hover:text-foreground text-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1">
                   Admin
                 </Link>
               </nav>
