@@ -1,64 +1,35 @@
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - apinet
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    networks:
-      - apinet
-
-  sandbox:
-    build:
-      context: ./sandbox
-    ports:
-      - "3001:3001"
-    environment:
-      - PORT=3001
-    networks:
-      - apinet
-
   gateway:
-    build:
-      context: ./gateway
+    build: ./gateway
     ports:
       - "8080:8080"
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017
-      - REDIS_ADDR=redis:6379
-      - SANDBOX_URL=http://sandbox:3001
-      - PORT=8080
     depends_on:
-      - mongodb
+      - mongo
       - redis
-      - sandbox
-    networks:
-      - apinet
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/apibuilder
+      - REDIS_ADDR=redis:6379
 
   frontend:
-    build:
-      context: ./frontend
+    build: ./frontend
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8080
-    depends_on:
-      - gateway
-    networks:
-      - apinet
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
 
 volumes:
-  mongodb_data:
-
-networks:
-  apinet:
-    driver: bridge
+  mongo_data:
