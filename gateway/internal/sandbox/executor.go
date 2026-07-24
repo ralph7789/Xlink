@@ -1,4 +1,4 @@
-package main
+package sandbox
 
 import (
 	"fmt"
@@ -28,9 +28,13 @@ func ExecuteCode(code string) (string, error) {
 		resCh <- val
 	}()
 
+	timer := time.NewTimer(50 * time.Millisecond)
+	defer timer.Stop()
+
 	select {
-	case <-time.After(50 * time.Millisecond):
+	case <-timer.C:
 		iso.TerminateExecution()
+		<-errCh
 		return "", fmt.Errorf("execution timed out")
 	case err := <-errCh:
 		return "", err

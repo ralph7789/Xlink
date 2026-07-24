@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:alpine AS builder
 
 # v8go requires CGO
 ENV CGO_ENABLED=1
@@ -11,7 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /app/gateway .
+RUN go build -o /app/gateway ./cmd/server
 
 FROM alpine:latest
 RUN apk add --no-cache libstdc++

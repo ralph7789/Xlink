@@ -1,13 +1,11 @@
-package main
+package storage
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,7 +17,7 @@ var (
 	ctx         = context.Background()
 )
 
-func initDBs() {
+func InitDBs() {
 	// Setup MongoDB
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
@@ -58,42 +56,8 @@ func initDBs() {
 	fmt.Println("Connected to Redis!")
 }
 
-func main() {
-	initDBs()
-	defer MongoClient.Disconnect(ctx)
-
-	r := gin.Default()
-
-	// Health check endpoint
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
-		})
-	})
-
-	// Placeholder for dynamic routes
-	r.Any("/p/:slug/*path", handleDynamicRoute)
-	
-	// WebSocket endpoint
-	r.GET("/ws/:slug/*path", handleWebSocket)
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+func DisconnectMongo() {
+	if MongoClient != nil {
+		MongoClient.Disconnect(ctx)
 	}
-
-	fmt.Printf("Gateway starting on port %s\n", port)
-	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
-	}
-}
-
-func handleDynamicRoute(c *gin.Context) {
-	slug := c.Param("slug")
-	path := c.Param("path")
-	
-	// This will be expanded in the sandbox implementation
-	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf("Dynamic route executed for project: %s, path: %s", slug, path),
-	})
 }
