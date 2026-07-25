@@ -1,8 +1,7 @@
-FROM golang:alpine AS builder
+FROM golang:1.22-bookworm AS builder
 
 # v8go requires CGO
 ENV CGO_ENABLED=1
-RUN apk add --no-cache gcc g++ musl-dev
 
 WORKDIR /app
 
@@ -11,10 +10,10 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /app/gateway ./cmd/server
+RUN go build -o /app/gateway main.go
 
-FROM alpine:latest
-RUN apk add --no-cache libstdc++
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
