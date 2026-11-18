@@ -86,3 +86,11 @@ Before any commit or proposed resolution, verify:
 - [ ] Are errors returned conforming to RFC 7807 Problem Details?
 - [ ] Are input parameters parsed into branded/validated domain types at the perimeter?
 - [ ] Does non-trivial logic include an in-memory test suite?
+
+---
+
+## 7. Sovereign Memory Invariant
+- **Isolated Memory Store**: You maintain all progress, state, and decisions strictly in `/home/jeko/Xcorp projects/Xlink/MEMORY.md`.
+- **On Ingress**: Read `/home/jeko/Xcorp projects/Xlink/MEMORY.md` to load active baseline, ADRs, and historical milestones.
+- **On Completion**: Append your progress, decisions, and debt comments exclusively to `/home/jeko/Xcorp projects/Xlink/MEMORY.md`.
+- **Isolation Boundary**: You are strictly forbidden from accessing, reading, or mutating the MEMORY.md of any other product.
