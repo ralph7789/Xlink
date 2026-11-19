@@ -19,6 +19,7 @@ COPY . .
 # Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN mkdir -p /app/public
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -46,6 +47,7 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD HOSTNAME="0.0.0.0" node server.js
+CMD ["node", "server.js"]

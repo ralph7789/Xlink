@@ -52,3 +52,4 @@
 - 2026-09-14: Configured dynamic API routing for auxiliary microservices.
 - 2026-11-18: Sovereign agent initialized; in-repo AGENT.md and isolated MEMORY.md established.
 - 2026-11-20: Integrated complete Unified Enterprise Entity Master Knowledge Base (`KNOWLEDGEBASE.md`). Updated `AGENT.md` and `MEMORY.md` with complete article index covering Delta query, Webhooks, Batching, Keyset queries, Throttling, and XID/Sentinel security models.
+- 2026-11-20: Hardened Dockerfiles and container build toolchains: calibrated `gateway/go.mod` to Go 1.22; installed `libstdc++6` and `ca-certificates` in gateway runner stage for `v8go` CGO binary; initialized `frontend/public/.gitkeep` with builder fallback `mkdir -p /app/public`; sanitized frontend runner with `ENV HOSTNAME="0.0.0.0"` and `CMD ["node", "server.js"]`.
