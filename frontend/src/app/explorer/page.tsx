@@ -472,7 +472,7 @@ print(response.json())`;
         {/* Method Picker */}
         <select
           value={method}
-          onChange={(e) => setMethod(e.target.value as any)}
+          onChange={(e) => setMethod(e.target.value as "GET" | "POST" | "PUT" | "PATCH" | "DELETE")}
           aria-label="HTTP Method"
           className="bg-slate-900 border border-slate-700 text-sm font-bold rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
         >
@@ -486,7 +486,7 @@ print(response.json())`;
         {/* Version Picker */}
         <select
           value={version}
-          onChange={(e) => setVersion(e.target.value as any)}
+          onChange={(e) => setVersion(e.target.value as "v1.0" | "beta")}
           aria-label="API Version"
           className="bg-slate-900 border border-slate-700 text-sm font-mono rounded-lg px-3 py-2 text-cyan-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >

@@ -41,7 +41,7 @@ export default function AdminThrottlingPage() {
     setIsSaving(true);
     try {
       // First fetch current full config to merge cleanly
-      let fullCfg: any = {};
+      let fullCfg: Record<string, unknown> = {};
       try {
         const getRes = await fetch("/api/admin/config");
         if (getRes.ok) {

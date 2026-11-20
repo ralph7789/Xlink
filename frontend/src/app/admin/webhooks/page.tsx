@@ -87,7 +87,7 @@ export default function AdminWebhooksPage() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      let fullCfg: any = {};
+      let fullCfg: Record<string, unknown> = {};
       try {
         const getRes = await fetch("/api/admin/config");
         if (getRes.ok) fullCfg = await getRes.json();
