@@ -19,7 +19,7 @@ COPY gateway/go.mod gateway/go.sum* ./
 RUN go mod download
 
 COPY gateway/ ./
-RUN go build -o /app/gateway .
+RUN go build -o /app/gateway_bin .
 
 # Stage 3: Minimal Production Debian Runner
 FROM debian:bookworm-slim
@@ -28,7 +28,8 @@ RUN apt-get update && apt-get install -y ca-certificates libstdc++6 && rm -rf /v
 WORKDIR /app
 
 # Copy compiled gateway binary from Stage 2
-COPY --from=gateway-builder /app/gateway ./gateway
+COPY --from=gateway-builder /app/gateway_bin ./gateway
+RUN chmod +x ./gateway
 
 # Copy exported Next.js static site from Stage 1 to ./static
 COPY --from=frontend-builder /app/frontend/out ./static
