@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm AS builder
+FROM golang:bookworm AS builder
 
 # v8go requires CGO
 ENV CGO_ENABLED=1
@@ -11,7 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /app/gateway main.go
+RUN go build -o /app/gateway .
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates libstdc++6 && rm -rf /var/lib/apt/lists/*

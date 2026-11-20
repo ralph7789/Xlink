@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm AS builder
+FROM golang:bookworm AS builder
 
 # v8go requires CGO
 ENV CGO_ENABLED=1
@@ -14,7 +14,7 @@ RUN go mod download
 COPY gateway/ .
 
 # Compile gateway binary
-RUN go build -o /app/gateway main.go
+RUN go build -o /app/gateway .
 
 # Production runtime stage
 FROM debian:bookworm-slim
