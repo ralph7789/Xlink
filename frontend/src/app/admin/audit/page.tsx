@@ -44,7 +44,7 @@ export default function AdminAuditPage() {
       timestamp: "2026-11-20T06:05:00Z",
       actor: "xdrive-sync-daemon",
       event: "ResumableUploadSessionInit",
-      resource: "/v1.0/me/drive/root:/:createUploadSession",
+      resource: "/v1.0/me/drive/root/createUploadSession",
       ipAddress: "10.240.2.19",
       result: "Success",
       threatScore: 0,

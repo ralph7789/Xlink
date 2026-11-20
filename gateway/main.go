@@ -364,7 +364,7 @@ func initStore() {
 				Timestamp:   now.Add(-45 * time.Minute),
 				Actor:       "xdrive-sync-daemon",
 				Event:       "ResumableUploadSessionInit",
-				Resource:    "/v1.0/me/drive/root:/:createUploadSession",
+				Resource:    "/v1.0/me/drive/root/createUploadSession",
 				IPAddress:   "10.240.2.19",
 				Result:      "Success",
 				ThreatScore: 0,
@@ -597,7 +597,7 @@ func registerEntityRoutes(rg *gin.RouterGroup, version string) {
 	// Files & Drives (X-Drive)
 	rg.GET("/drives", handleGetDrives(version))
 	rg.GET("/me/drive/root/children", handleGetDriveChildren(version))
-	rg.POST("/me/drive/root:/:createUploadSession", handleCreateUploadSession(version))
+	rg.POST("/me/drive/root/createUploadSession", handleCreateUploadSession(version))
 	rg.POST("/me/drive/items/:itemId/createUploadSession", handleCreateUploadSession(version))
 
 	// Productivity: Messages & Mail

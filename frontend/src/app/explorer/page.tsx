@@ -60,7 +60,7 @@ const SAMPLE_QUERIES: SampleQuery[] = [
     name: "Create 320 KiB Resumable Upload Session",
     method: "POST",
     version: "v1.0",
-    endpoint: "/me/drive/root:/:createUploadSession",
+    endpoint: "/me/drive/root/createUploadSession",
     body: JSON.stringify(
       {
         item: {
