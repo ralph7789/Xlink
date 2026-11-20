@@ -75,7 +75,7 @@ export default function AdminThrottlingPage() {
       {/* Title */}
       <div className="pb-6 border-b border-slate-800">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          Token Bucket Throttling Policies
+          API Quotas &amp; Token Bucket Rate Limiting
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
             HTTP 429 Guard
           </span>

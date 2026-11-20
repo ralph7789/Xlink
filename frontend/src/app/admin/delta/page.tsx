@@ -63,7 +63,7 @@ export default function AdminDeltaPage() {
       {/* Title */}
       <div className="pb-6 border-b border-slate-800">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          Delta Query Engine &amp; Tombstone Retention
+          Data Synchronization &amp; Watermarks
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
             @odata.deltaLink
           </span>

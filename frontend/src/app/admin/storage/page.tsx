@@ -87,7 +87,7 @@ export default function AdminStoragePage() {
       {/* Title */}
       <div className="pb-6 border-b border-slate-800">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          Tenant Shard Storage &amp; XID Mapping
+          Tenant Shard Routing &amp; Persistence
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
             XDB Distributed Shards
           </span>

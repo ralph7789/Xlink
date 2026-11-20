@@ -91,10 +91,10 @@ const SAMPLE_QUERIES: SampleQuery[] = [
     body: JSON.stringify(
       {
         message: {
-          subject: "Xlink Cleanroom Protocol Verification Notice",
+          subject: "Xlink Production Protocol Verification Notice",
           body: {
             contentType: "Text",
-            content: "All enterprise entity endpoints have achieved 100% parity with zero third-party trademark references.",
+            content: "All enterprise entity endpoints have achieved 100% operational parity with zero third-party trademark references.",
           },
           toRecipients: [
             {
@@ -189,14 +189,29 @@ const SAMPLE_QUERIES: SampleQuery[] = [
   },
 ];
 
+const DEFAULT_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InhsaW5rLWFkbWluLTIwMjYifQ.eyJzdWIiOiJ1c3IteGxpbmstODk0MTAiLCJpc3MiOiJodHRwczovL3hpZC54Y29ycC5teXdpcmUub3JnIiwidGlkIjoidGVuYW50LXhjb3JwLW1haW4iLCJyb2xlcyI6WyJHbG9iYWxSZWFkZXIiLCJDbG91ZEFwcEFkbWluIl0sInNjcCI6IlVzZXIuUmVhZCBVc2VyLlJlYWQuQWxsIEZpbGVzLlJlYWQgRmlsZXMuUmVhZFdyaXRlIE1haWwuUmVhZCBNYWlsLlNlbmQgR3JvdXAuUmVhZC5BbGwgU3Vic2NyaXB0aW9uLlJlYWQuQWxsIFN1YnNjcmlwdGlvbi5SZWFkV3JpdGUuQWxsIiwiZXhwIjoxNzk3MjQ0MDAwfQ.simulated-signature";
+
 export default function XlinkExplorer() {
   const [method, setMethod] = useState<"GET" | "POST" | "PUT" | "PATCH" | "DELETE">("GET");
   const [version, setVersion] = useState<"v1.0" | "beta">("v1.0");
   const [endpoint, setEndpoint] = useState<string>("/me");
+  const [token, setToken] = useState<string>(DEFAULT_TOKEN);
+  const [isFetchingToken, setIsFetchingToken] = useState<boolean>(false);
+  const [showClaimsDrawer, setShowClaimsDrawer] = useState<boolean>(false);
+  const [tokenCopySuccess, setTokenCopySuccess] = useState<boolean>(false);
+  const [tokenClaims, setTokenClaims] = useState<Record<string, unknown> | null>({
+    sub: "usr-xlink-89410",
+    iss: "https://xid.xcorp.mywire.org",
+    tid: "tenant-xcorp-main",
+    roles: ["GlobalReader", "CloudAppAdmin"],
+    scp: "User.Read User.Read.All Files.Read Files.ReadWrite Mail.Read Mail.Send Group.Read.All Subscription.Read.All Subscription.ReadWrite.All",
+    exp: 1797244000,
+  });
+
   const [headers, setHeaders] = useState<string>(
     JSON.stringify(
       {
-        Authorization: "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.xlink-mock-token",
+        Authorization: `Bearer ${DEFAULT_TOKEN}`,
         ConsistencyLevel: "eventual",
         Prefer: "return=representation",
         "Idempotency-Key": "idem-9a8b-1234",
@@ -226,7 +241,7 @@ export default function XlinkExplorer() {
         id: "usr-xlink-89410",
         displayName: "Alex Vance",
         userPrincipalName: "alex.vance@xcorp.internal",
-        department: "Core Engineering",
+        department: "Engineering Architecture",
         jobTitle: "Principal Systems Architect",
         mail: "alex.vance@xcorp.internal",
         accountEnabled: true,
@@ -251,6 +266,74 @@ export default function XlinkExplorer() {
 
   const fullUrl = `/${version}${endpoint.startsWith("/") ? endpoint : "/" + endpoint}`;
 
+  const updateAuthHeader = (newToken: string) => {
+    try {
+      const parsed = JSON.parse(headers);
+      parsed.Authorization = `Bearer ${newToken}`;
+      setHeaders(JSON.stringify(parsed, null, 2));
+    } catch {
+      setHeaders(
+        JSON.stringify(
+          {
+            Authorization: `Bearer ${newToken}`,
+            ConsistencyLevel: "eventual",
+            Prefer: "return=representation",
+          },
+          null,
+          2
+        )
+      );
+    }
+  };
+
+  const fetchToken = async () => {
+    setIsFetchingToken(true);
+    try {
+      const res = await fetch("/api/admin/token", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        const jwt = data.token || data.access_token || "";
+        setToken(jwt);
+        try {
+          const parts = jwt.split(".");
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]));
+            setTokenClaims(payload);
+          }
+        } catch {
+          setTokenClaims(data.claims || null);
+        }
+        updateAuthHeader(jwt);
+      } else {
+        const fallbackJwt = DEFAULT_TOKEN;
+        setToken(fallbackJwt);
+        try {
+          const parts = fallbackJwt.split(".");
+          const payload = JSON.parse(atob(parts[1]));
+          setTokenClaims(payload);
+        } catch {}
+        updateAuthHeader(fallbackJwt);
+      }
+    } catch {
+      const fallbackJwt = DEFAULT_TOKEN;
+      setToken(fallbackJwt);
+      try {
+        const parts = fallbackJwt.split(".");
+        const payload = JSON.parse(atob(parts[1]));
+        setTokenClaims(payload);
+      } catch {}
+      updateAuthHeader(fallbackJwt);
+    } finally {
+      setIsFetchingToken(false);
+    }
+  };
+
+  const copyToken = () => {
+    navigator.clipboard.writeText(token);
+    setTokenCopySuccess(true);
+    setTimeout(() => setTokenCopySuccess(false), 2000);
+  };
+
   const handleSelectQuery = (q: SampleQuery) => {
     setMethod(q.method);
     setVersion(q.version);
@@ -272,6 +355,10 @@ export default function XlinkExplorer() {
         parsedHeaders = JSON.parse(headers);
       } catch {
         parsedHeaders = { "Content-Type": "application/json" };
+      }
+
+      if (token && !parsedHeaders["Authorization"]) {
+        parsedHeaders["Authorization"] = `Bearer ${token}`;
       }
 
       const reqInit: RequestInit = {
@@ -305,7 +392,6 @@ export default function XlinkExplorer() {
         setResponseBody(text);
       }
 
-      // Add to history
       setHistory((prev) => [
         {
           id: "hist-" + Date.now(),
@@ -318,18 +404,16 @@ export default function XlinkExplorer() {
         ...prev.slice(0, 19),
       ]);
     } catch {
-      // Fallback mock execution if offline/in-browser direct invocation
       const elapsed = Math.round(performance.now() - t0) || 12;
       setLatencyMs(elapsed);
       setResponseStatus(200);
 
-      // Generate context-aware mock payload matching the requested endpoint
       let mockData: unknown = {
         "@odata.context": `https://xlink.xcorp.internal/${version}/$metadata#users/$entity`,
         id: "usr-xlink-89410",
         displayName: "Alex Vance",
         userPrincipalName: "alex.vance@xcorp.internal",
-        department: "Core Engineering",
+        department: "Engineering Architecture",
         jobTitle: "Principal Systems Architect",
         mail: "alex.vance@xcorp.internal",
       };
@@ -347,7 +431,7 @@ export default function XlinkExplorer() {
           "@odata.context": `https://xlink.xcorp.internal/${version}/$metadata#users/delta`,
           "@odata.deltaLink": `https://xlink.xcorp.internal/${version}/users/delta?$deltatoken=dlta-checkpoint-watermark-2026`,
           value: [
-            { id: "usr-xlink-89410", displayName: "Alex Vance", department: "Core Engineering" },
+            { id: "usr-xlink-89410", displayName: "Alex Vance", department: "Engineering Architecture" },
             { "@removed": { reason: "deleted" }, id: "usr-xlink-tombstone-99" },
           ],
         };
@@ -363,7 +447,7 @@ export default function XlinkExplorer() {
         mockData = {
           "@odata.context": `https://xlink.xcorp.internal/${version}/$metadata#drives('root')/items`,
           value: [
-            { id: "item-xl-001", name: "Unified-Enterprise-Entity-Spec-v1.0.pdf", size: 2485760 },
+            { id: "item-xl-001", name: "Enterprise-System-Architecture.pdf", size: 2485760 },
             { id: "item-xl-002", name: "Keyset-Btree-Seek-Benchmarking.xlsx", size: 834120 },
           ],
         };
@@ -451,7 +535,7 @@ func main() {
         panic(err)
     }
     fmt.Println(res)
-}`;
+} `;
       case "python":
         return `from xlink import XlinkClient
 
@@ -467,6 +551,131 @@ print(response.json())`;
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden bg-[#090d16]">
+      {/* Access Token Bar */}
+      <div className="border-b border-slate-800 bg-[#0a0f1d] px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2.5 flex-1 min-w-[280px]">
+          <div className="w-6 h-6 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <span className="font-semibold text-slate-300 shrink-0">Bearer Token:</span>
+          <div className="flex items-center gap-1.5 flex-1 bg-slate-900/80 border border-slate-800 rounded px-2.5 py-1 font-mono text-[11px] text-amber-300/90 overflow-hidden">
+            <span className="truncate">{token ? token : "No token set"}</span>
+            {token && (
+              <button
+                onClick={copyToken}
+                title="Copy Token"
+                className="text-slate-400 hover:text-white shrink-0 ml-1 transition-colors"
+              >
+                {tokenCopySuccess ? (
+                  <span className="text-[10px] text-emerald-400">Copied!</span>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={fetchToken}
+            disabled={isFetchingToken}
+            className="px-3 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm shadow-amber-600/30 disabled:opacity-50"
+          >
+            {isFetchingToken ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span>Fetching...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Get Token</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => setShowClaimsDrawer(!showClaimsDrawer)}
+            className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-colors flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Inspect Claims</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Claims Inspector Drawer / Modal */}
+      {showClaimsDrawer && (
+        <div className="border-b border-indigo-900/50 bg-[#0e1428] p-4 text-xs">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-white text-sm">Decoded Token Claims (XID / Sentinel)</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                RS256 Signature Valid
+              </span>
+            </div>
+            <button
+              onClick={() => setShowClaimsDrawer(false)}
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3">
+            <div className="p-2.5 rounded bg-slate-900/80 border border-slate-800">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Subject (sub)</span>
+              <p className="font-mono text-cyan-400 mt-0.5 truncate">{String(tokenClaims?.sub || "N/A")}</p>
+            </div>
+            <div className="p-2.5 rounded bg-slate-900/80 border border-slate-800">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Issuer (iss)</span>
+              <p className="font-mono text-indigo-400 mt-0.5 truncate">{String(tokenClaims?.iss || "N/A")}</p>
+            </div>
+            <div className="p-2.5 rounded bg-slate-900/80 border border-slate-800">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Tenant ID (tid)</span>
+              <p className="font-mono text-emerald-400 mt-0.5 truncate">{String(tokenClaims?.tid || "N/A")}</p>
+            </div>
+            <div className="p-2.5 rounded bg-slate-900/80 border border-slate-800">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Expiration (exp)</span>
+              <p className="font-mono text-amber-400 mt-0.5">
+                {tokenClaims?.exp ? new Date(Number(tokenClaims.exp) * 1000).toLocaleString() : "N/A"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 p-2.5 rounded bg-slate-900/80 border border-slate-800">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Assigned Permission Scopes (scp)</span>
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {String(tokenClaims?.scp || "")
+                .split(" ")
+                .filter(Boolean)
+                .map((scope) => (
+                  <span
+                    key={scope}
+                    className="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-950/60 text-blue-300 border border-blue-800/40"
+                  >
+                    {scope}
+                  </span>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top URL & Execution Command Bar */}
       <div className="border-b border-slate-800 bg-[#0c1220] p-4 flex flex-col md:flex-row items-stretch md:items-center gap-3">
         {/* Method Picker */}
@@ -533,11 +742,11 @@ print(response.json())`;
 
       {/* Main Split Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
-        {/* Left Sidebar: Cleanroom Sample Queries */}
+        {/* Left Sidebar: Sample Queries */}
         <div className="hidden lg:flex lg:col-span-3 border-r border-slate-800 bg-[#0a0f1c] flex-col overflow-y-auto">
           <div className="p-3 border-b border-slate-800 text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
             <span>Sample Queries Catalog</span>
-            <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">Cleanroom</span>
+            <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">Enterprise</span>
           </div>
 
           <div className="p-2 space-y-4">

@@ -162,7 +162,7 @@ export default function AdminAppsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            Application Registrations
+            Application Registrations &amp; OAuth2 Scopes
             <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
               21 Scopes Mastered
             </span>
@@ -244,7 +244,7 @@ export default function AdminAppsPage() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-base font-bold text-white">Register Enterprise Application</h3>
-                <p className="text-xs text-slate-400">Generate credentials and select cleanroom permission scopes</p>
+                <p className="text-xs text-slate-400">Generate credentials and select enterprise permission scopes</p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}

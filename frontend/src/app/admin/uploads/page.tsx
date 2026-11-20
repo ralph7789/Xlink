@@ -72,7 +72,7 @@ export default function AdminUploadsPage() {
       {/* Title */}
       <div className="pb-6 border-b border-slate-800">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          320 KiB Resumable Upload Bounds
+          Resumable Upload Sessions &amp; 320 KiB Boundary Enforcement
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             X-Drive Storage Bus
           </span>
@@ -108,7 +108,7 @@ export default function AdminUploadsPage() {
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-cyan-300 font-mono focus:outline-none focus:border-blue-500"
             />
             <p className="text-[11px] text-slate-500">
-              Mandatory multiple of 320 KiB (327,680 bytes) per cleanroom protocol specification
+              Mandatory multiple of 320 KiB (327,680 bytes) per protocol standards
             </p>
           </div>
 

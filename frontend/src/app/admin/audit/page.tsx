@@ -103,13 +103,13 @@ export default function AdminAuditPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            Sentinel SOC Immutable Audit Ledger
+            Sentinel SOC Security Audit Trail
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               Zero-Trust Audit Trail
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Tamper-evident access log stream with cryptographic trace IDs, actor identities, and threat risk scoring.
+            Cryptographic access log stream with trace IDs, actor identities, and threat risk scoring.
           </p>
         </div>
 

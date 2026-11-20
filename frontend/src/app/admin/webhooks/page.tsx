@@ -115,7 +115,7 @@ export default function AdminWebhooksPage() {
       {/* Title */}
       <div className="pb-6 border-b border-slate-800">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          Webhooks &amp; Cryptographic Security
+          Event Subscriptions &amp; Webhooks
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
             validationToken Handshake
           </span>
